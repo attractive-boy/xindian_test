@@ -106,7 +106,12 @@ for btn in [btn_start, btn_pause, btn_export]:
 # 动画控制变量
 is_running = True
 
+# 警报控制变量
+last_alarm_time = 0
+ALARM_INTERVAL = 3  # 警报间隔时间（秒）
+
 runtime_data = {}
+
 
 def export_data(event):
     try:
@@ -133,7 +138,7 @@ btn_pause.on_clicked(pause)
 btn_export.on_clicked(export_data)
 
 def update(frame): 
-    global data_buffer1, data_buffer2, is_alert_playing
+    global data_buffer1, data_buffer2, last_alarm_time
  
     if ser.in_waiting:
         try:
@@ -157,14 +162,11 @@ def update(frame):
 
                 # 在bpm < 40 或者 > 120 时，嘀嘀嘀 警报
                 if bpm_value < 40 or bpm_value > 120:
-                    if not is_alert_playing:
-                        # 播放音频 dididi.mp3 (后台循环播放)
-                        winsound.PlaySound('dididi.mp3', winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP)
-                        is_alert_playing = True
-                elif is_alert_playing:
-                    # 停止播放警报
-                    winsound.PlaySound(None, winsound.SND_PURGE)
-                    is_alert_playing = False
+                    current_time = time.time()
+                    if current_time - last_alarm_time >= ALARM_INTERVAL:
+                        winsound.Beep(1000, 500)
+                        last_alarm_time = current_time
+
     
 
                 runtime_data[time.time()] = {
